@@ -1,0 +1,20 @@
+{
+    "name": "abdou-aziz/location_voiture",
+    "description": "Conception et implémentation d’une application web pour une agence de location de voitures",
+    "type": "project",
+    "require": {
+        "vlucas/phpdotenv": "^5.6"
+    },
+    "autoload": {
+        "psr-4": {
+            "AbdouAziz\\LocationVoiture\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "AbdouAziz",
+            "email": "abdouaziz583@gmail.com"
+        }
+    ],
+    "minimum-stability": "stable"
+}
