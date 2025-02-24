@@ -1,0 +1,19 @@
+# Ignorer le fichier .env (contient des informations sensibles)
+.env
+
+# Ignorer le dossier vendor (dépendances Composer)
+vendor/
+
+# Ignorer les fichiers de configuration locaux
+/config/*.local.php
+
+# Ignorer les fichiers de logs
+/storage/logs/*
+
+# Ignorer les fichiers de cache
+/storage/framework/cache/*
+/storage/framework/views/*
+
+# Ignorer les fichiers d'environnement de développement
+/.idea
+/.vscode
