@@ -23,7 +23,6 @@ class RecupVoiture {
             $description = $_POST['description'] ?? ''; 
             $images = $_POST['images'] ?? ''; 
             
-  var_dump($description);
            
             $result = $this->voitureModel->create($marque, $modele, $annee, $prix_location, $code, $categorie, $description, $images);
 
