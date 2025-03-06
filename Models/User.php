@@ -59,5 +59,35 @@ class User {
         }
     }
 
+    public function update($id, $prenom, $nom, $email, $telephone = null) {
+        $query = "UPDATE Utilisateurs SET prenom = :prenom, nom = :nom, email = :email";
+        
+        $params = [
+            ':prenom' => $prenom,
+            ':nom' => $nom,
+            ':email' => $email,
+            ':id' => $id
+        ];
+        
+        if ($telephone !== null) {
+            $query .= ", telephone = :telephone";
+            $params[':telephone'] = $telephone;
+        }
+        
+        $query .= " WHERE id = :id";
+        
+        try {
+            $stmt = $this->db->prepare($query);
+            
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value);
+            }
+            
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            error_log("Erreur lors de la mise à jour de l'utilisateur : " . $e->getMessage());
+            return false;
+        }
+    }
     // Vous pouvez ajouter d'autres méthodes si nécessaire
 }
