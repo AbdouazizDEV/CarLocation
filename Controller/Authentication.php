@@ -17,20 +17,36 @@ class Authentication {
         $user = $this->userModel->findByEmail($email);
     
         if ($user) {
-            // Ajoutez ce débogage pour vérifier le mot de passe
-            // echo "<pre>Mot de passe fourni : $password</pre>";
-            // echo "<pre>Mot de passe haché dans la base : " . $user['mot_de_passe'] . "</pre>";
-    
             if ($password === $user['mot_de_passe']) {
+                // Démarrer la session et stocker toutes les informations de l'utilisateur
                 session_start();
                 $_SESSION['user'] = $user;
-                require_once __DIR__ . "/../Views/Acceuil.php"; 
+                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['user_nom'] = $user['nom'];
+                $_SESSION['user_prenom'] = $user['prenom'];
+                $_SESSION['user_email'] = $user['email'];
+                $_SESSION['user_role'] = $user['role'];
+                $_SESSION['user_statut'] = $user['statut'];
+                
+                // Rediriger en fonction du rôle
+                if ($user['role'] === 'client') {
+                    header("Location: ../Views/AcceuilClient.php");
+                } else if ($user['role'] === 'gérant') {
+                    header("Location: ../Views/AcceuilGerant.php");
+                } else {
+                    // Par défaut, si le rôle n'est pas reconnu
+                    header("Location: ../Location_Voiture/Views/AcceuilVIsiteur.php");
+                }
                 exit;
             } else {
-                echo "Mot de passe incorrect.";
+                $_SESSION['error'] = "Mot de passe incorrect.";
+                header("Location: ../Views/login.php");
+                exit;
             }
         } else {
-            echo "Aucun utilisateur trouvé avec cet email.";
+            $_SESSION['error'] = "Aucun utilisateur trouvé avec cet email.";
+            header("Location: ../Views/login.php");
+            exit;
         }
     }
 }

@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . "/../Models/User.php";
+session_start();
 
 // Utilisation du contrôleur
 $registerController = new RegisterController();
@@ -21,6 +22,7 @@ class RegisterController {
             $mot_de_passe = $_POST['mot_de_passe'] ?? '';
             $confirm_mot_de_passe = $_POST['confirm_mot_de_passe'] ?? '';
             $statut = $_POST['statut'] ?? 'actif'; // Par défaut "actif"
+            $role = 'client'; // Par défaut, les nouveaux utilisateurs sont des clients
 
             // Validation des données
             $errors = [];
@@ -45,20 +47,22 @@ class RegisterController {
 
             // Si aucune erreur, procéder à l'inscription
             if (empty($errors)) {
-                $userId = $this->userModel->create($nom, $prenom, $email, $mot_de_passe, $statut);
+                $userId = $this->userModel->create($nom, $prenom, $email, $mot_de_passe, $role, $statut);
 
                 if ($userId) {
                     // Rediriger vers une page de succès ou de connexion
-                    header("Location: ../Views/Acceuil.php");
+                    header("Location: ../Views/login.php");
                     exit();
                 } else {
                     $errors[] = "Une erreur s'est produite lors de l'inscription.";
                 }
             }
 
-            // Afficher les erreurs (si nécessaire)
-            foreach ($errors as $error) {
-                echo "<p style='color: red;'>$error</p>";
+            // Stocker les erreurs dans la session pour les afficher
+            if (!empty($errors)) {
+                $_SESSION['errors'] = $errors;
+                header("Location: ../Views/login.php");
+                exit();
             }
         }
     }

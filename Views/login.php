@@ -1,10 +1,11 @@
 <?php
+session_start();
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    require_once __DIR__ . "/../Controller/Authentication.php"; // ✅ Corrigé
+    require_once __DIR__ . "/../Controller/Authentication.php";
 
     $auth = new Authentication();
     $auth->login($_POST['email'], $_POST['mot_de_passe']);
@@ -15,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inscription - Location de Voitures</title>
+    <title>Connexion - Location de Voitures</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <style>
@@ -60,15 +61,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="col-md-8">
                             <div class="mb-4 pb-3 border-bottom">
                                 <h4 class="fw-bold">Bienvenue chez NDAAMAR Location de voitures</h4>
-                                <p class="text-muted small">Créez votre compte en quelques étapes seulement</p>
+                                <p class="text-muted small">Connectez-vous ou créez un compte</p>
                             </div>
                             
                             <ul class="nav nav-pills nav-fill mb-4" id="accountTabs" role="tablist">
                                 <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="login-tab" data-bs-toggle="pill" data-bs-target="#login" type="button" role="tab">Login</button>
+                                    <button class="nav-link active" id="login-tab" data-bs-toggle="pill" data-bs-target="#login" type="button" role="tab">Login</button>
                                 </li>
                                 <li class="nav-item" role="presentation">
-                                    <button class="nav-link active" id="register-tab" data-bs-toggle="pill" data-bs-target="#register" type="button" role="tab">Register</button>
+                                    <button class="nav-link" id="register-tab" data-bs-toggle="pill" data-bs-target="#register" type="button" role="tab">Register</button>
                                 </li>
                             </ul>
                             
@@ -81,25 +82,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 </div>
                             <?php endif; ?>
                             
+                            <?php if (isset($_SESSION['errors'])): ?>
+                                <div class="alert alert-danger">
+                                    <ul>
+                                    <?php 
+                                    foreach ($_SESSION['errors'] as $error) {
+                                        echo "<li>" . $error . "</li>";
+                                    }
+                                    unset($_SESSION['errors']);
+                                    ?>
+                                    </ul>
+                                </div>
+                            <?php endif; ?>
+                            
                             <div class="tab-content" id="accountTabsContent">
-                                <div class="tab-pane fade" id="login" role="tabpanel" aria-labelledby="login-tab">
+                                <div class="tab-pane fade show active" id="login" role="tabpanel" aria-labelledby="login-tab">
                                     <form method="POST" action="">
                                         <div class="mb-3">
-                                            <label for="username" class="form-label">Username</label>
-                                            <input type="text" class="form-control" id="username" name="email" required>
+                                            <label for="username" class="form-label">Email</label>
+                                            <input type="email" class="form-control" id="username" name="email" required>
                                         </div>
                                         <div class="mb-4">
-                                            <label for="password" class="form-label">Password</label>
+                                            <label for="password" class="form-label">Mot de passe</label>
                                             <input type="password" class="form-control" id="password" name="mot_de_passe" required>
                                         </div>
                                         <div class="d-grid">
-                                            <button type="submit" class="btn btn-primary">Login</button>
+                                            <button type="submit" class="btn btn-primary">Se connecter</button>
                                         </div>
                                     </form>
                                 </div>
-                                <div class="tab-pane fade show active" id="register" role="tabpanel" aria-labelledby="register-tab">
-                                <!-- Formulaire d'inscription de l'utilisateur le traitement de trouve dans RegisterController.php qui se trouve dans le dossier controller donnez moi le chemin pour action-->
-                                    <form method="POST" action="Controller/RegisterController.php">
+                                <div class="tab-pane fade" id="register" role="tabpanel" aria-labelledby="register-tab">
+                                    <form method="POST" action="../Controller/RegisterController.php">
                                         <div class="row">
                                             <div class="col-md-6 mb-3">
                                                 <label for="nom" class="form-label">Nom</label>
