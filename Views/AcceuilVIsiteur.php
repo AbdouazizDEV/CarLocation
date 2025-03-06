@@ -161,13 +161,13 @@ session_start();
                             </div>
                         </form>
                         <div class="navbar-nav ms-auto profile-section">
-                            <div class="nav-item dropdown">
+                        <div class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown">
-                                    <img src="../Assets/Images/us-flag.png" alt="English" width="20" height="15">
+                                    <img src="https://res.cloudinary.com/dhivn2ahm/image/upload/v1741275355/Flag_of_the_United_Kingdom__3-5_.svg_uuwyft.png" alt="English" width="20" height="15">
                                 </a>
                                 <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" href="#"><img src="../Assets/Images/us-flag.png" alt="English" width="20" height="15"> English</a></li>
-                                    <li><a class="dropdown-item" href="#"><img src="../Assets/Images/fr-flag.png" alt="Français" width="20" height="15"> Français</a></li>
+                                    <li><a class="dropdown-item" href="#"><img src="https://res.cloudinary.com/dhivn2ahm/image/upload/v1741275355/Flag_of_the_United_Kingdom__3-5_.svg_uuwyft.png" alt="English" width="20" height="15"> English</a></li>
+                                    <li><a class="dropdown-item" href="#"><img src="https://res.cloudinary.com/dhivn2ahm/image/upload/v1741275393/Flag_of_France.svg_pu9ohf.png" alt="Français" width="20" height="15"> Français</a></li>
                                 </ul>
                             </div>
                             <a class="nav-link" href="#">
