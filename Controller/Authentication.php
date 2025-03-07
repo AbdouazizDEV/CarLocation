@@ -31,11 +31,11 @@ class Authentication {
                 // Rediriger en fonction du rôle
                 if ($user['role'] === 'client') {
                     header("Location: ../Views/AcceuilClient.php");
-                } else if ($user['role'] === 'gérant') {
+                } else if ($user['role'] === 'gérant') {
                     header("Location: ../Views/AcceuilGerant.php");
                 } else {
                     // Par défaut, si le rôle n'est pas reconnu
-                    header("Location: ../Location_Voiture/Views/AcceuilVIsiteur.php");
+                    header("Location: ../Views/AcceuilVIsiteur.php");
                 }
                 exit;
             } else {

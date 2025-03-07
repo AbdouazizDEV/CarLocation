@@ -4,7 +4,7 @@
 
 require_once __DIR__ . "/../Models/voiture.php";
 
-class RecupVoiture {
+class recupoffres {
     private $voitureModel;
 
     public function __construct() {
@@ -13,7 +13,7 @@ class RecupVoiture {
 
     public function voiture() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-          
+           
             $marque = $_POST['marque'] ?? '';
             $modele = $_POST['modele'] ?? '';
             $annee = $_POST['annee'] ?? '';
@@ -40,6 +40,6 @@ class RecupVoiture {
 }
 
 // Utilisation du contrôleur
-$recupvoiture = new RecupVoiture();
+$recupvoiture = new Recupvoiture();
 $recupvoiture->voiture();
 ?>
