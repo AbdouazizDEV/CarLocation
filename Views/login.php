@@ -138,6 +138,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             <label for="confirm_mot_de_passe" class="form-label">Confirmer le mot de passe</label>
                                             <input type="password" class="form-control" id="confirm_mot_de_passe" name="confirm_mot_de_passe" required>
                                         </div>
+                                        <!-- ajouter le  telephone et l'adresse-->
+                                         <div class="mb-3">
+                                            <label for="telephone" class="form-label">Téléphone</label>
+                                            <input type="tel" class="form-control" id="telephone" name="telephone" required>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="adresse" class="form-label">Adresse</label>
+                                            <input type="text" class="form-control" id="adresse" name="adresse" required>
+                                        </div>
                                         
                                         <div class="mb-4">
                                             <label class="form-label d-block">Statut</label>

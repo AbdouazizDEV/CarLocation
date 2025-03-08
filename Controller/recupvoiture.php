@@ -2,7 +2,9 @@
 session_start();
 require_once __DIR__ . "/../Models/voiture.php";
 
-class recupvoiture{
+
+class RecupVoiture {
+
     private $voitureModel;
 
     public function __construct() {
@@ -11,7 +13,6 @@ class recupvoiture{
 
     public function voiture() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
             // Récupérer les données du formulaire
             $marque = $_POST['marque'] ?? '';
             $modele = $_POST['modele'] ?? '';
@@ -207,4 +208,3 @@ class recupvoiture{
 $recupVoiture = new recupvoiture();
 $recupVoiture->voiture();
 ?>
-
