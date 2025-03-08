@@ -2,7 +2,7 @@
 session_start();
 require_once __DIR__ . "/../Models/voiture.php";
 
-class recupoffres {
+class recupvoiture{
     private $voitureModel;
 
     public function __construct() {
@@ -204,7 +204,7 @@ class recupoffres {
 }
 
 // Instanciation et exécution du contrôleur
-$recupVoiture = new RecupVoiture();
+$recupVoiture = new recupvoiture();
 $recupVoiture->voiture();
 ?>
 
