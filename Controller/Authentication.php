@@ -17,7 +17,8 @@ class Authentication {
         $user = $this->userModel->findByEmail($email);
     
         if ($user) {
-            if ($password === $user['mot_de_passe']) {
+            // Utiliser password_verify pour comparer avec le mot de passe haché
+            if (password_verify($password, $user['mot_de_passe'])) {
                 // Démarrer la session et stocker toutes les informations de l'utilisateur
                 session_start();
                 $_SESSION['user'] = $user;
@@ -31,7 +32,7 @@ class Authentication {
                 // Rediriger en fonction du rôle
                 if ($user['role'] === 'client') {
                     header("Location: ../Views/AcceuilClient.php");
-                } else if ($user['role'] === 'gérant') {
+                } else if ($user['role'] === 'gérant') {
                     header("Location: ../Views/AcceuilGerant.php");
                 } else {
                     // Par défaut, si le rôle n'est pas reconnu
