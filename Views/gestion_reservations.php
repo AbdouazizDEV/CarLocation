@@ -586,9 +586,9 @@ document.addEventListener('DOMContentLoaded', function() {
                                     </div>
                                     <div class="card-body">
                                         <h6 id="viewClientName">Chargement...</h6>
-                                        <p class="mb-1"><i class="fas fa-envelope me-2"></i><span id="viewClientEmail">Chargement...</span></p>
-                                        <p class="mb-1"><i class="fas fa-phone me-2"></i><span id="viewClientPhone">Chargement...</span></p>
-                                        <p class="mb-0"><i class="fas fa-map-marker-alt me-2"></i><span id="viewClientAddress">Chargement...</span></p>
+                                        <p class="mb-1"><i class="fas fa-envelope me-2"></i><span id="viewClientEmail"><?php echo $client['email'] ; ?></span></p>
+                                        <p class="mb-1"><i class="fas fa-phone me-2"></i><span id="viewClientPhone"><?php echo $client['telephone'] ; ?></span></p>
+                                        <p class="mb-0"><i class="fas fa-map-marker-alt me-2"></i><span id="viewClientAddress"><?php echo $client['adresse'] ; ?></span></p>
                                     </div>
                                 </div>
                                 
@@ -602,9 +602,10 @@ document.addEventListener('DOMContentLoaded', function() {
                                                 <img id="viewVehicleImage" src="https://res.cloudinary.com/dhivn2ahm/image/upload/v1740519207/imageNDAAMAR_ov0d7x.jpg" alt="Véhicule" class="car-image">
                                             </div>
                                             <div>
+                                                ⅛<?php $Voiture= $voitureModel-> getAllVoitures();?>
                                                 <h6 id="viewVehicleName">Chargement...</h6>
-                                                <p class="mb-1"><strong>Catégorie:</strong> <span id="viewVehicleCategory">Chargement...</span></p>
-                                                <p class="mb-0"><strong>Prix par jour:</strong> <span id="viewVehiclePrice">Chargement...</span></p>
+                                                <p class="mb-1"><strong>Catégorie:</strong> <span id="viewVehicleCategory"><?php echo $Voiture['categorie'] ?></span></p>
+                                                <p class="mb-0"><strong>Prix par jour:</strong> <span id="viewVehiclePrice"><?php echo $Voiture['prix_location'] ?></span></p>
                                             </div>
                                         </div>
                                     </div>

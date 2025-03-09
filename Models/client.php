@@ -2,7 +2,7 @@
 require_once __DIR__ . "/../Database/Connect.php";
 
 class Client {
-    private $db;
+    public $db;
     private $lastError = null;
 
     public function __construct() {

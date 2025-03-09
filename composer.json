@@ -1,15 +1,19 @@
 {
-    "name": "hp/car-location",
-    "type": "project",
+    "name": "abdou-aziz/location_voiture",
     "autoload": {
         "psr-4": {
-            "Hp\\CarLocation\\": "src/"
+            "AbdouAziz\\LocationVoiture\\": "src/"
         }
     },
     "authors": [
         {
-            "name": "stable"
+            "name": "AbdouAziz",
+            "email": "abdouaziz583@gmail.com"
         }
     ],
-    "require": {}
+    "require": {
+        "setasign/fpdf": "^1.8",
+        "vlucas/phpdotenv": "^5.6",
+        "phpmailer/phpmailer": "^6.9"
+    }
 }

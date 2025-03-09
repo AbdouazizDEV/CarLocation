@@ -378,7 +378,7 @@
                     <div class="modal-header">
                         <h5 class="modal-title" id="addVehicleModalLabel">Ajouter une voiture</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
+                    </div>  
                     <div class="modal-body">
                         <form method="POST" action="../Controller/recupvoiture.php" enctype="multipart/form-data" id="addVehicleForm">
                             <div class="row">
@@ -393,6 +393,29 @@
                                             <option value="Tesla">Tesla</option>
                                             <option value="Ferrari">Ferrari</option>
                                             <option value="Mercedes">Mercedes</option>
+                                            <option value="Toyota">Toyota</option>
+                                            <option value="Honda">Honda</option>
+                                            <option value="Nissan">Nissan</option>
+                                            <option value="Subaru">Subaru</option>
+                                            <option value="Mitsubishi">Mitsubishi</option>
+                                            <option value="Mazda">Mazda</option>
+                                            <option value="Suzuki">Suzuki</option>
+                                            <option value="Volkswagen">Volkswagen</option>
+                                            <option value="Ford">Ford</option>
+                                            <option value="Jaguar">Jaguar</option>
+                                            <option value="Kia">Kia</option>
+                                            <option value="Dodge">Dodge</option>
+                                            <option value="Chevrolet">Chevrolet</option>
+                                            <option value="Lexus">Lexus</option>
+                                            <option value="Volvo">Volvo</option>
+                                            <option value="Hyundai">Hyundai</option>
+                                            <option value="Infiniti">Infiniti</option>
+                                            <option value="Scion">Scion</option>
+                                            <option value="Chrysler">Chrysler</option>
+                                            <option value="Buick">Buick</option>
+                                            <option value="Lamborghini">Lamborghini</option>
+                                            <option value="Land Rover"> Land Rover</option>
+
                                         </select>
                                     </div>
                                 </div>
@@ -581,6 +604,14 @@
                                             <option value="Tesla">Tesla</option>
                                             <option value="Ferrari">Ferrari</option>
                                             <option value="Mercedes">Mercedes</option>
+                                            <option value="Ford">Ford</option>
+                                            <option value="Toyota">Toyota</option>
+                                            <option value="Honda">Honda</option>
+                                            <option value="Nissan">Nissan</option>
+                                            <option value="Subaru">Subaru</option>
+                                            <option value="Mitsubishi">Mitsubishi</option>
+                                            <option value="Mazda">Mazda</option>
+                                            <option value="Suzuki">Suzuki</option>
                                         </select>
                                     </div>
                                 </div>
@@ -1102,7 +1133,30 @@
                     'BMW': ['Mini', 'Rolls-Royce', 'BMW iX1', 'Bmw Ix2', 'Bmw I7'],
                     'Tesla': ['Tesla Model S', 'Tesla Model 3', 'Tesla Model X', 'Tesla Model Y', 'Tesla Cybertruck'],
                     'Ferrari': ['Ferrari 12cilindri', 'Ferrari 296', 'Ferrari 488', 'Ferrari Daytona Sp3', 'Ferrari 812 Gts'],
-                    'Mercedes': ['EQE Berline', 'Classe A Berline', 'Classe E Berline', 'Classe S', 'Classe S Limousine']
+                    'Mercedes': ['EQE Berline', 'Classe A Berline', 'Classe E Berline', 'Classe S', 'Classe S Limousine'],
+                    'Toyota': ['Toyota Corolla', 'Toyota Camry', 'Toyota Rav4', 'Toyota Prius', 'Toyota Yaris'],
+                    'Honda': ['Honda Civic', 'Honda Accord', 'Honda CR-V', 'Honda Fit', 'Honda Civic Type R'],
+                    'Nissan': ['Nissan Qashqai', 'Nissan Leaf', 'Nissan GTR', 'Nissan GT-R', 'Nissan Silvia'],
+                    'Subaru': ['Subaru Impreza', 'Subaru Outback', 'Subaru Forester', 'Subaru WRX', 'Subaru Legacy'],
+                    'Mitsubishi': ['Mitsubishi Mirage', 'Mitsubishi Outlander', 'Mitsubishi Pajero', 'Mitsubishi Lancer', 'Mitsubishi Lancer Evolution'],
+                    'Mazda': ['Mazda 3', 'Mazda 6', 'Mazda 6 GTS', 'Mazda 5', 'Mazda CX-5'],
+                    'Suzuki': ['Suzuki Swift', 'Suzuki Jimny', 'Suzuki Vitara', 'Suzuki Celerio', 'Suzuki Ertiga'],
+                    'Ford': ['Ford Focus', 'Ford Mustang', 'Ford F-150', 'Ford Mustang Mach-E', 'Ford Ranger'],
+                    'Chevrolet': ['Chevrolet Cruze', 'Chevrolet Tahoe', 'Chevrolet Corvette', 'Chevrolet Camaro', 'Chevrolet Malibu'],
+                    'Volkswagen': ['Volkswagen Golf', 'Volkswagen Passat', 'Volkswagen Tiguan', 'Volkswagen Polo', 'Volkswagen Jetta'],
+                    'Lamborghini': ['Lamborghini Huracan', 'Lamborghini Urus', 'Lamborghini Aventador', 'Lamborghini Veneno', 'Lamborghini Aventador S'],
+                    'Porsche': ['Porsche 911', 'Porsche 928', 'Porsche 944', 'Porsche 968', 'Porsche 918 Spyder'],
+                    'Jaguar': ['Jaguar E-Type', 'Jaguar XF', 'Jaguar F-Type', 'Jaguar XJ', 'Jaguar I-Pace'],
+                    'Bentley': ['Bentley Continental GT', 'Bentley Mulsanne', 'Bentley Continental GT C', 'Bentley Continental Flying Spur', 'Bentley Continental GT R'],
+                    'Dodge': ['Dodge Charger', 'Dodge Ram', 'Dodge Challenger', 'Dodge Durango', 'Dodge Nitro'],
+                    'Fiat': ['Fiat Punto', 'Fiat 500', 'Fiat 126p', 'Fiat 1300', 'Fiat 147'],
+                    'Renault': ['Renault Megane', 'Renault Kangoo', 'Renault Duster', 'Renault Symbol', 'Renault Trafic'],
+                    'Citroën': ['Citroën C3', 'Citroën C4', 'Citroën C5', 'Citroën C6', 'Citroën C8'],
+                    'Hyundai': ['Hyundai Accent', 'Hyundai Sonata', 'Hyundai Tucson', 'Hyundai Elantra', 'Hyundai Kona'],
+                    'Volvo': ['Volvo XC90', 'Volvo S60', 'Volvo C70', 'Volvo V70', 'Volvo XC70'],
+                    'Infiniti': ['Infiniti Q50', 'Infiniti Q70', 'Infiniti QX50', 'Infiniti G35', 'Infiniti G37'],
+                    'Kia': ['Kia Optima', 'Kia Soul', 'Kia Rio', 'Kia Forte', 'Kia Sportage'],
+                    'Land Rover': ['Land Rover Range Rover Sport', 'Land Rover Range Rover Evoque', 'Land Rover Discovery Sport', 'Land Rover Range Rover', 'Land Rover Fusion'],
                 };
                 
                 function populateModelSelect(brandSelect, modelSelect) {
