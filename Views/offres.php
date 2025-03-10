@@ -133,7 +133,6 @@ echo "</tr>";
     //echo "Erreur lors de l'exécution de la requête.";
 //}
 ?>
-
 </body>
 
 </html>
