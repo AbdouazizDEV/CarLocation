@@ -12,14 +12,14 @@ require_once __DIR__ . "/../Models/voiture.php";
 // Vérifier que l'utilisateur est connecté
 if (!isset($_SESSION['user']) || !isset($_SESSION['user_id'])) {
     $_SESSION['error'] = "Vous devez être connecté pour effectuer cette action.";
-    header('Location: login.php');
+    header('Location: ../Views/login.php');
     exit;
 }
 
 // Vérifier que l'utilisateur est un client
 if ($_SESSION['user_role'] !== 'client') {
     $_SESSION['error'] = "Seuls les clients peuvent effectuer des réservations.";
-    header('Location: login.php');
+    header('Location: ../Views/login.php');
     exit;
 }
 
@@ -56,18 +56,35 @@ switch ($action) {
             exit;
         }
         
+        // Vérifier manuellement la disponibilité du véhicule pour les dates sélectionnées
+        $isAvailable = $reservationModel->isVehicleAvailable($vehiculeId, $dateDebut, $dateFin);
+        if (!$isAvailable) {
+            $_SESSION['error'] = "Ce véhicule n'est pas disponible pour les dates sélectionnées.";
+            header('Location: ../Views/AcceuilClient.php');
+            exit;
+        }
+        
+        // Calculer la durée de location en jours pour obtenir le prix total
+        $debut = new DateTime($dateDebut);
+        $fin = new DateTime($dateFin);
+        $duree = $debut->diff($fin)->days;
+        
         // Calculer le prix avec réduction si une offre est sélectionnée
         if ($offreId) {
             $prixDetails = $offreModel->calculateDiscountedPrice($vehiculeId, $offreId);
             if ($prixDetails) {
-                $prixTotal = $prixDetails['discounted_price'];
+                $prixBase = $vehicule['prix_location'];
                 $reduction = $prixDetails['discount'];
+                $prixJour = $prixDetails['discounted_price'];
+                $prixTotal = $prixJour * $duree;
             } else {
-                $prixTotal = $vehicule['prix_location'];
+                $prixBase = $vehicule['prix_location'];
+                $prixTotal = $prixBase * $duree;
                 $reduction = 0;
             }
         } else {
-            $prixTotal = $vehicule['prix_location'];
+            $prixBase = $vehicule['prix_location'];
+            $prixTotal = $prixBase * $duree;
             $reduction = 0;
         }
         
@@ -80,14 +97,17 @@ switch ($action) {
                 $vehiculeIds = array_column($vehiculesOffre, 'id');
                 
                 if (in_array($vehiculeId, $vehiculeIds)) {
-                    $prixDetails = $offreModel->calculateDiscountedPrice($vehiculeId, $offre['id']);
-                    if ($prixDetails) {
-                        $prixTotal = $prixDetails['discounted_price'];
-                        $reduction = $prixDetails['discount'];
-                        $offreId = $offre['id'];
-                    }
+                    $reduction = $offre['reduction'];
+                    $prixTotal = $prixBase * $duree * (1 - $reduction / 100);
+                    $offreId = $offre['id'];
                 }
             }
+        }
+        
+        // Préparer une note pour la réservation
+        $notes = "Réservation effectuée en ligne. Durée: {$duree} jours.";
+        if ($reduction > 0) {
+            $notes .= " Réduction appliquée: {$reduction}%.";
         }
         
         // Créer la réservation
@@ -97,8 +117,8 @@ switch ($action) {
             $dateDebut,
             $dateFin,
             $prixTotal,
-            $offreId,
-            $reduction
+            $notes,
+            $offreId
         );
         
         if ($result) {
@@ -122,13 +142,20 @@ switch ($action) {
         
         // Vérifier que la réservation appartient bien à l'utilisateur
         $reservation = $reservationModel->getReservationById($reservationId);
-        if (!$reservation || $reservation['client_id'] != $_SESSION['user_id']) {
+        if (!$reservation || $reservation['utilisateur_id'] != $_SESSION['user_id']) {
             $_SESSION['error'] = "Vous n'avez pas l'autorisation d'annuler cette réservation.";
             header('Location: ../Views/reservations.php');
             exit;
         }
         
-        $result = $reservationModel->updateStatus($reservationId, 'annulée');
+        // Vérifier que la réservation est dans un état où elle peut être annulée
+        if (!in_array($reservation['statut'], ['en_attente', 'confirmee'])) {
+            $_SESSION['error'] = "Cette réservation ne peut plus être annulée car son statut est : " . $reservation['statut'];
+            header('Location: ../Views/reservations.php');
+            exit;
+        }
+        
+        $result = $reservationModel->updateStatus($reservationId, 'annulee', "Annulation par le client via l'interface web");
         
         if ($result) {
             $_SESSION['success'] = "Votre réservation a été annulée avec succès.";

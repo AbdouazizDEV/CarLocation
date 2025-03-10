@@ -1,7 +1,7 @@
 <?php
 
 
-require_once 'Voitures.php';
+require_once '../Models/voiture.php';
 
 class ReservationClient {
 

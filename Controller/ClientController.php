@@ -1,341 +1,511 @@
 <?php
+/**
+ * Contrôleur pour gérer les clients (côté administrateur/gérant)
+ * 
+ * Ce fichier gère toutes les opérations liées aux clients :
+ * - Création, modification, suppression de client
+ * - Consultation des détails d'un client
+ * - Activation/désactivation d'un client
+ * - Gestion des notes et commentaires
+ */
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 session_start();
 require_once __DIR__ . "/../Models/client.php";
-require_once __DIR__ . "/../Models/User.php";
 require_once __DIR__ . "/../Models/Reservation.php";
 
 // Vérifier si l'utilisateur est connecté et est un gérant
 if (!isset($_SESSION['user']) || $_SESSION['user_role'] !== 'gérant') {
-    if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && in_array($_GET['action'], ['get', 'getReservations', 'getPayments', 'getFavorites', 'getNotes'])) {
-        // Pour les requêtes AJAX de récupération de données, renvoyer une erreur JSON
+    if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+        // Si c'est une requête AJAX, retourner une erreur JSON
         header('Content-Type: application/json');
         echo json_encode(['error' => 'Accès non autorisé']);
         exit();
     } else {
-        // Pour les autres requêtes, rediriger vers la page de connexion
-        header('Location: ../Views/login.php');
+        // Sinon, rediriger vers la page de connexion
+        $_SESSION['error'] = "Vous devez être connecté en tant que gérant pour effectuer cette action.";
+        header('Location: ../View/login.php');
         exit();
     }
 }
 
-// Instanciation des modèles
+// Instancier les modèles nécessaires
 $clientModel = new Client();
-$userModel = new User();
 $reservationModel = new Reservation();
 
-// Traitement des requêtes GET (pour récupérer des données)
-if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
-    $action = $_GET['action'];
+// Récupérer l'action demandée
+$action = $_POST['action'] ?? $_GET['action'] ?? null;
+
+// Traiter l'action en fonction de la demande
+switch ($action) {
+    case 'add':
+        // Création d'un nouveau client
+        handleAddClient();
+        break;
+        
+    case 'update':
+        // Mise à jour d'un client existant
+        handleUpdateClient();
+        break;
+        
+    case 'activate':
+        // Activation d'un client
+        handleActivateClient();
+        break;
+        
+    case 'deactivate':
+        // Désactivation d'un client
+        handleDeactivateClient();
+        break;
+        
+    case 'get':
+        // Récupération des détails d'un client
+        handleGetClient();
+        break;
+        
+    case 'getReservations':
+        // Récupération des réservations d'un client
+        handleGetClientReservations();
+        break;
+        
+    case 'getPayments':
+        // Récupération des paiements d'un client
+        handleGetClientPayments();
+        break;
+        
+    case 'getFavorites':
+        // Récupération des favoris d'un client
+        handleGetClientFavorites();
+        break;
+        
+    case 'getNotes':
+        // Récupération des notes d'un client
+        handleGetClientNotes();
+        break;
+        
+    case 'addNote':
+        // Ajout d'une note sur un client
+        handleAddClientNote();
+        break;
+        
+    default:
+        // Action non reconnue
+        if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'Action non reconnue']);
+            exit();
+        } else {
+            $_SESSION['error'] = "Action non reconnue.";
+            header('Location: ../Views/gestion_clients.php');
+            exit();
+        }
+}
+
+/**
+ * Gère la création d'un nouveau client
+ */
+function handleAddClient() {
+    global $clientModel;
     
-    switch ($action) {
-        case 'get':
-            // Récupérer les détails d'un client
-            $id = $_GET['id'] ?? 0;
-            
-            if (empty($id)) {
-                header('Content-Type: application/json');
-                echo json_encode(['error' => 'ID client manquant']);
-                exit();
-            }
-            
-            $client = $clientModel->getClientById($id);
-            
-            if (!$client) {
-                header('Content-Type: application/json');
-                echo json_encode(['error' => 'Client non trouvé']);
-                exit();
-            }
-            
-            // Ajouter des statistiques supplémentaires
-            $client['reservation_count'] = $clientModel->getClientReservationCount($id);
-            $client['total_spent'] = $clientModel->getClientTotalSpent($id);
-            
-            header('Content-Type: application/json');
-            echo json_encode($client);
+    // Vérifier si tous les champs requis sont présents
+    if (!isset($_POST['nom']) || !isset($_POST['prenom']) || !isset($_POST['email']) || !isset($_POST['mot_de_passe'])) {
+        $_SESSION['error'] = "Tous les champs requis doivent être remplis.";
+        header('Location: ../Views/gestion_clients.php');
+        exit();
+    }
+    
+    // Récupérer les données du formulaire
+    $nom = $_POST['nom'];
+    $prenom = $_POST['prenom'];
+    $email = $_POST['email'];
+    $mot_de_passe = $_POST['mot_de_passe'];
+    $telephone = $_POST['telephone'] ?? null;
+    $adresse = $_POST['adresse'] ?? null;
+    $statut = $_POST['statut'] ?? 'actif';
+    
+    // Créer l'utilisateur d'abord
+    // Attention : Ceci est une simplification. Dans un système réel, vous devriez utiliser un modèle Utilisateur séparé.
+    try {
+        // Hash du mot de passe
+        $mot_de_passe_hash = password_hash($mot_de_passe, PASSWORD_DEFAULT);
+        
+        // Connexion directe à la base de données pour insérer un utilisateur
+        $db = $clientModel->db;
+        
+        // Vérifier si l'email est déjà utilisé
+        $checkQuery = "SELECT id FROM Utilisateurs WHERE email = :email";
+        $checkStmt = $db->prepare($checkQuery);
+        $checkStmt->bindParam(':email', $email);
+        $checkStmt->execute();
+        
+        if ($checkStmt->rowCount() > 0) {
+            $_SESSION['error'] = "Cette adresse email est déjà utilisée.";
+            header('Location: ../Views/gestion_clients.php');
             exit();
-            break;
-            
-        case 'getReservations':
-            // Récupérer les réservations d'un client
-            $id = $_GET['id'] ?? 0;
-            
-            if (empty($id)) {
-                header('Content-Type: application/json');
-                echo json_encode(['error' => 'ID client manquant']);
-                exit();
-            }
-            
-            $reservations = $clientModel->getClientReservations($id);
-            
-            header('Content-Type: application/json');
-            echo json_encode($reservations);
+        }
+        
+        // Insérer le nouvel utilisateur en utilisant le model client.php
+
+        $query = "INSERT INTO Utilisateurs (nom, prenom, email, mot_de_passe, statut) VALUES (:nom, :prenom, :email, :mot_de_passe, :statut)";
+        $stmt = $db->prepare($query);
+        
+        $params = [
+            ':nom' => $nom,
+            ':prenom' => $prenom,
+            ':email' => $email,
+            ':mot_de_passe' => $mot_de_passe_hash,
+            ':statut' => $statut
+        ];
+        
+        $result = $stmt->execute($params);
+        
+        if (!$result) {
+            $_SESSION['error'] = "Erreur lors de la création de l'utilisateur: " . implode(", ", $stmt->errorInfo());
+            header('Location: ../Views/gestion_clients.php');
             exit();
-            break;
-            
-        case 'getPayments':
-            // Récupérer les paiements d'un client
-            $id = $_GET['id'] ?? 0;
-            
-            if (empty($id)) {
-                header('Content-Type: application/json');
-                echo json_encode(['error' => 'ID client manquant']);
-                exit();
-            }
-            
-            $payments = $clientModel->getClientPayments($id);
-            
-            header('Content-Type: application/json');
-            echo json_encode($payments);
+        }
+        
+        $utilisateur_id = $db->lastInsertId();
+        
+        // Créer le client associé à cet utilisateur
+        $client_id = $clientModel->create($utilisateur_id, $telephone, $adresse);
+        
+        if (!$client_id) {
+            $_SESSION['error'] = "Erreur lors de la création du client: " . $clientModel->getLastError();
+            header('Location: ../Views/gestion_clients.php');
             exit();
-            break;
-            
-        case 'getFavorites':
-            // Récupérer les favoris d'un client
-            $id = $_GET['id'] ?? 0;
-            
-            if (empty($id)) {
-                header('Content-Type: application/json');
-                echo json_encode(['error' => 'ID client manquant']);
-                exit();
-            }
-            
-            $favorites = $clientModel->getClientFavorites($id);
-            
-            header('Content-Type: application/json');
-            echo json_encode($favorites);
-            exit();
-            break;
-            
-        case 'getNotes':
-            // Récupérer les notes d'un client
-            $id = $_GET['id'] ?? 0;
-            
-            if (empty($id)) {
-                header('Content-Type: application/json');
-                echo json_encode(['error' => 'ID client manquant']);
-                exit();
-            }
-            
-            $notes = $clientModel->getClientNotes($id);
-            
-            header('Content-Type: application/json');
-            echo json_encode($notes);
-            exit();
-            break;
+        }
+        
+        // Succès
+        $_SESSION['success'] = "Le client a été créé avec succès.";
+        header('Location: ../Views/gestion_clients.php');
+        exit();
+        
+    } catch (Exception $e) {
+        $_SESSION['error'] = "Exception: " . $e->getMessage();
+        header('Location: ../Views/gestion_clients.php');
+        exit();
     }
 }
 
-// Traitement des requêtes POST (pour modifier des données)
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $action = $_POST['action'] ?? '';
+/**
+ * Gère la mise à jour d'un client existant
+ */
+function handleUpdateClient() {
+    global $clientModel;
     
-    switch ($action) {
-        case 'add':
-            // Ajouter un nouveau client
-            $nom = $_POST['nom'] ?? '';
-            $prenom = $_POST['prenom'] ?? '';
-            $email = $_POST['email'] ?? '';
-            $mot_de_passe = $_POST['mot_de_passe'] ?? '';
-            $telephone = $_POST['telephone'] ?? '';
-            $adresse = $_POST['adresse'] ?? '';
-            $statut = $_POST['statut'] ?? 'actif';
-            
-            // Validation des données
-            $errors = [];
-            
-            if (empty($nom) || empty($prenom) || empty($email) || empty($mot_de_passe)) {
-                $errors[] = "Tous les champs obligatoires doivent être remplis.";
-            }
-            
-            // Vérifier si l'email existe déjà
-            if ($userModel->findByEmail($email)) {
-                $errors[] = "Cet email est déjà utilisé par un autre utilisateur.";
-            }
-            
-            if (empty($errors)) {
-                // Hacher le mot de passe
-                $hashed_password = password_hash($mot_de_passe, PASSWORD_DEFAULT);
-                
-                // Début de la transaction globale
-                $clientModel->db->beginTransaction();
-                
-                try {
-                    // Créer d'abord l'utilisateur
-                    $userId = $userModel->create($nom, $prenom, $email, $hashed_password, 'client', $statut);
-                    
-                    if (!$userId) {
-                        throw new Exception("Erreur lors de la création de l'utilisateur: " . $userModel->getLastError());
-                    }
-                    
-                    // Ensuite créer le client associé
-                    $clientId = $clientModel->create($userId, $telephone, $adresse);
-                    
-                    if (!$clientId) {
-                        throw new Exception("Erreur lors de la création du client: " . $clientModel->getLastError());
-                    }
-                    
-                    // Tout s'est bien passé, on valide la transaction
-                    $clientModel->db->commit();
-                    
-                    $_SESSION['success'] = "Le client a été ajouté avec succès.";
-                } catch (Exception $e) {
-                    // En cas d'erreur, annuler toutes les modifications
-                    $clientModel->db->rollBack();
-                    $_SESSION['error'] = $e->getMessage();
-                }
-            } else {
-                $_SESSION['error'] = implode("<br>", $errors);
-            }
-            
+    // Vérifier si tous les champs requis sont présents
+    if (!isset($_POST['client_id']) || !isset($_POST['nom']) || !isset($_POST['prenom']) || !isset($_POST['email'])) {
+        $_SESSION['error'] = "Tous les champs requis doivent être remplis.";
+        header('Location: ../Views/gestion_clients.php');
+        exit();
+    }
+    
+    // Récupérer les données du formulaire
+    $client_id = intval($_POST['client_id']);
+    $nom = $_POST['nom'];
+    $prenom = $_POST['prenom'];
+    $email = $_POST['email'];
+    $telephone = $_POST['telephone'] ?? null;
+    $adresse = $_POST['adresse'] ?? null;
+    $statut = $_POST['statut'] ?? 'actif';
+    
+    try {
+        // Récupérer le client pour obtenir l'utilisateur_id
+        $client = $clientModel->getClientById($client_id);
+        
+        if (!$client) {
+            $_SESSION['error'] = "Client non trouvé.";
             header('Location: ../Views/gestion_clients.php');
             exit();
-            break;
-            
-        case 'update':
-            // Mettre à jour un client existant
-            $client_id = $_POST['client_id'] ?? 0;
-            $nom = $_POST['nom'] ?? '';
-            $prenom = $_POST['prenom'] ?? '';
-            $email = $_POST['email'] ?? '';
-            $telephone = $_POST['telephone'] ?? '';
-            $adresse = $_POST['adresse'] ?? '';
-            $statut = $_POST['statut'] ?? '';
-            
-            // Validation des données
-            $errors = [];
-            
-            if (empty($client_id) || empty($nom) || empty($prenom) || empty($email)) {
-                $errors[] = "Les champs obligatoires doivent être remplis.";
-            }
-            
-            if (empty($errors)) {
-                // Récupérer le client pour avoir son ID utilisateur
-                $client = $clientModel->getClientById($client_id);
-                
-                if (!$client) {
-                    $_SESSION['error'] = "Client non trouvé.";
-                    header('Location: ../Views/gestion_clients.php');
-                    exit();
-                }
-                
-                $utilisateur_id = $client['utilisateur_id'];
-                
-                // Début de la transaction
-                $clientModel->db->beginTransaction();
-                
-                try {
-                    // Mettre à jour l'utilisateur
-                    $userUpdated = $userModel->update($utilisateur_id, $prenom, $nom, $email);
-                    
-                    if (!$userUpdated) {
-                        throw new Exception("Erreur lors de la mise à jour de l'utilisateur.");
-                    }
-                    
-                    // Mettre à jour le statut de l'utilisateur si nécessaire
-                    if (!empty($statut) && $statut !== $client['statut']) {
-                        $statusQuery = "UPDATE Utilisateurs SET statut = :statut WHERE id = :id";
-                        $stmt = $clientModel->db->prepare($statusQuery);
-                        $stmt->bindParam(':statut', $statut, PDO::PARAM_STR);
-                        $stmt->bindParam(':id', $utilisateur_id, PDO::PARAM_INT);
-                        
-                        if (!$stmt->execute()) {
-                            throw new Exception("Erreur lors de la mise à jour du statut.");
-                        }
-                    }
-                    
-                    // Mettre à jour les informations du client
-                    $clientUpdated = $clientModel->update($client_id, $telephone, $adresse);
-                    
-                    if (!$clientUpdated) {
-                        throw new Exception("Erreur lors de la mise à jour du client: " . $clientModel->getLastError());
-                    }
-                    
-                    // Tout s'est bien passé, on valide la transaction
-                    $clientModel->db->commit();
-                    
-                    $_SESSION['success'] = "Les informations du client ont été mises à jour avec succès.";
-                } catch (Exception $e) {
-                    // En cas d'erreur, annuler toutes les modifications
-                    $clientModel->db->rollBack();
-                    $_SESSION['error'] = $e->getMessage();
-                }
-            } else {
-                $_SESSION['error'] = implode("<br>", $errors);
-            }
-            
+        }
+        
+        $utilisateur_id = $client['utilisateur_id'];
+        
+        // Connexion directe à la base de données pour mettre à jour l'utilisateur
+        $db = $clientModel->db;
+        
+        // Vérifier si l'email est déjà utilisé par un autre utilisateur
+        $checkQuery = "SELECT id FROM Utilisateurs WHERE email = :email AND id != :utilisateur_id";
+        $checkStmt = $db->prepare($checkQuery);
+        $checkStmt->bindParam(':email', $email);
+        $checkStmt->bindParam(':utilisateur_id', $utilisateur_id);
+        $checkStmt->execute();
+        
+        if ($checkStmt->rowCount() > 0) {
+            $_SESSION['error'] = "Cette adresse email est déjà utilisée par un autre utilisateur.";
             header('Location: ../Views/gestion_clients.php');
             exit();
-            break;
-            
-        case 'deactivate':
-            // Désactiver un client
-            $client_id = $_POST['client_id'] ?? 0;
-            
-            if (empty($client_id)) {
-                $_SESSION['error'] = "ID client manquant.";
-                header('Location: ../Views/gestion_clients.php');
-                exit();
-            }
-            
-            if ($clientModel->deactivateClient($client_id)) {
-                $_SESSION['success'] = "Le client a été désactivé avec succès.";
-            } else {
-                $_SESSION['error'] = "Erreur lors de la désactivation du client: " . $clientModel->getLastError();
-            }
-            
+        }
+        
+        // Mettre à jour l'utilisateur
+        $query = "UPDATE Utilisateurs SET 
+                 nom = :nom,
+                 prenom = :prenom,
+                 email = :email,
+                 statut = :statut
+                 WHERE id = :utilisateur_id";
+        
+        $stmt = $db->prepare($query);
+        
+        $params = [
+            ':utilisateur_id' => $utilisateur_id,
+            ':nom' => $nom,
+            ':prenom' => $prenom,
+            ':email' => $email,
+            ':statut' => $statut
+        ];
+        
+        $result = $stmt->execute($params);
+        
+        if (!$result) {
+            $_SESSION['error'] = "Erreur lors de la mise à jour de l'utilisateur: " . implode(", ", $stmt->errorInfo());
             header('Location: ../Views/gestion_clients.php');
             exit();
-            break;
-            
-        case 'activate':
-            // Activer un client
-            $client_id = $_POST['client_id'] ?? 0;
-            
-            if (empty($client_id)) {
-                $_SESSION['error'] = "ID client manquant.";
-                header('Location: ../Views/gestion_clients.php');
-                exit();
-            }
-            
-            if ($clientModel->activateClient($client_id)) {
-                $_SESSION['success'] = "Le client a été activé avec succès.";
-            } else {
-                $_SESSION['error'] = "Erreur lors de l'activation du client: " . $clientModel->getLastError();
-            }
-            
+        }
+        
+        // Mettre à jour le client
+        $result = $clientModel->update($client_id, $telephone, $adresse);
+        
+        if (!$result) {
+            $_SESSION['error'] = "Erreur lors de la mise à jour du client: " . $clientModel->getLastError();
             header('Location: ../Views/gestion_clients.php');
             exit();
-            break;
-            
-        case 'addNote':
-            // Ajouter une note à un client
-            $client_id = $_POST['client_id'] ?? 0;
-            $note = $_POST['note'] ?? '';
-            
-            if (empty($client_id) || empty($note)) {
-                header('Content-Type: application/json');
-                echo json_encode(['error' => 'ID client ou note manquant']);
-                exit();
-            }
-            
-            $result = $clientModel->addClientNote($client_id, $note);
-            
-            header('Content-Type: application/json');
-            if ($result) {
-                echo json_encode(['success' => true, 'message' => 'Note ajoutée avec succès']);
-            } else {
-                echo json_encode(['error' => 'Erreur lors de l\'ajout de la note: ' . $clientModel->getLastError()]);
-            }
-            exit();
-            break;
+        }
+        
+        // Succès
+        $_SESSION['success'] = "Le client a été mis à jour avec succès.";
+        header('Location: ../Views/gestion_clients.php');
+        exit();
+        
+    } catch (Exception $e) {
+        $_SESSION['error'] = "Exception: " . $e->getMessage();
+        header('Location: ../Views/gestion_clients.php');
+        exit();
     }
 }
 
-// Si aucune action correspondante n'a été traitée, rediriger vers la page de gestion des clients
-header('Location: ../Views/gestion_clients.php');
-exit();
+/**
+ * Gère l'activation d'un client
+ */
+function handleActivateClient() {
+    global $clientModel;
+    
+    // Vérifier si l'ID du client est présent
+    if (!isset($_POST['client_id'])) {
+        $_SESSION['error'] = "ID de client manquant.";
+        header('Location: ../Views/gestion_clients.php');
+        exit();
+    }
+    
+    $client_id = intval($_POST['client_id']);
+    
+    // Activer le client
+    $result = $clientModel->activateClient($client_id);
+    
+    if (!$result) {
+        $_SESSION['error'] = "Erreur lors de l'activation du client: " . $clientModel->getLastError();
+        header('Location: ../Views/gestion_clients.php');
+        exit();
+    }
+    
+    // Succès
+    $_SESSION['success'] = "Le client a été activé avec succès.";
+    header('Location: ../Views/gestion_clients.php');
+    exit();
+}
+
+/**
+ * Gère la désactivation d'un client
+ */
+function handleDeactivateClient() {
+    global $clientModel;
+    
+    // Vérifier si l'ID du client est présent
+    if (!isset($_POST['client_id'])) {
+        $_SESSION['error'] = "ID de client manquant.";
+        header('Location: ../Views/gestion_clients.php');
+        exit();
+    }
+    
+    $client_id = intval($_POST['client_id']);
+    
+    // Désactiver le client
+    $result = $clientModel->deactivateClient($client_id);
+    
+    if (!$result) {
+        $_SESSION['error'] = "Erreur lors de la désactivation du client: " . $clientModel->getLastError();
+        header('Location: ../Views/gestion_clients.php');
+        exit();
+    }
+    
+    // Succès
+    $_SESSION['success'] = "Le client a été désactivé avec succès.";
+    header('Location: ../Views/gestion_clients.php');
+    exit();
+}
+
+/**
+ * Récupère les détails d'un client (format JSON)
+ */
+function handleGetClient() {
+    global $clientModel, $reservationModel;
+    
+    // Vérifier si l'ID est présent
+    if (!isset($_GET['id'])) {
+        header('Content-Type: application/json');
+        echo json_encode(['error' => 'ID de client manquant']);
+        exit();
+    }
+    
+    $client_id = intval($_GET['id']);
+    
+    // Récupérer le client
+    $client = $clientModel->getClientById($client_id);
+    
+    // Vérifier que le client existe
+    if (!$client) {
+        header('Content-Type: application/json');
+        echo json_encode(['error' => 'Client introuvable']);
+        exit();
+    }
+    
+    // Enrichir avec des statistiques supplémentaires
+    $client['reservation_count'] = $clientModel->getClientReservationCount($client_id);
+    $client['total_spent'] = $clientModel->getClientTotalSpent($client_id);
+    
+    // Renvoyer les données au format JSON
+    header('Content-Type: application/json');
+    echo json_encode($client);
+    exit();
+}
+
+/**
+ * Récupère les réservations d'un client (format JSON)
+ */
+function handleGetClientReservations() {
+    global $clientModel;
+    
+    // Vérifier si l'ID est présent
+    if (!isset($_GET['id'])) {
+        header('Content-Type: application/json');
+        echo json_encode(['error' => 'ID de client manquant']);
+        exit();
+    }
+    
+    $client_id = intval($_GET['id']);
+    
+    // Récupérer les réservations
+    $reservations = $clientModel->getClientReservations($client_id);
+    
+    // Renvoyer les données au format JSON
+    header('Content-Type: application/json');
+    echo json_encode($reservations);
+    exit();
+}
+
+/**
+ * Récupère les paiements d'un client (format JSON)
+ */
+function handleGetClientPayments() {
+    global $clientModel;
+    
+    // Vérifier si l'ID est présent
+    if (!isset($_GET['id'])) {
+        header('Content-Type: application/json');
+        echo json_encode(['error' => 'ID de client manquant']);
+        exit();
+    }
+    
+    $client_id = intval($_GET['id']);
+    
+    // Récupérer les paiements
+    $payments = $clientModel->getClientPayments($client_id);
+    
+    // Renvoyer les données au format JSON
+    header('Content-Type: application/json');
+    echo json_encode($payments);
+    exit();
+}
+
+/**
+ * Récupère les favoris d'un client (format JSON)
+ */
+function handleGetClientFavorites() {
+    global $clientModel;
+    
+    // Vérifier si l'ID est présent
+    if (!isset($_GET['id'])) {
+        header('Content-Type: application/json');
+        echo json_encode(['error' => 'ID de client manquant']);
+        exit();
+    }
+    
+    $client_id = intval($_GET['id']);
+    
+    // Récupérer les favoris
+    $favorites = $clientModel->getClientFavorites($client_id);
+    
+    // Renvoyer les données au format JSON
+    header('Content-Type: application/json');
+    echo json_encode($favorites);
+    exit();
+}
+
+/**
+ * Récupère les notes d'un client (format JSON)
+ */
+function handleGetClientNotes() {
+    global $clientModel;
+    
+    // Vérifier si l'ID est présent
+    if (!isset($_GET['id'])) {
+        header('Content-Type: application/json');
+        echo json_encode(['error' => 'ID de client manquant']);
+        exit();
+    }
+    
+    $client_id = intval($_GET['id']);
+    
+    // Récupérer les notes
+    $notes = $clientModel->getClientNotes($client_id);
+    
+    // Renvoyer les données au format JSON
+    header('Content-Type: application/json');
+    echo json_encode($notes);
+    exit();
+}
+
+/**
+ * Ajoute une note sur un client
+ */
+function handleAddClientNote() {
+    global $clientModel;
+    
+    // Vérifier si tous les champs requis sont présents
+    if (!isset($_POST['client_id']) || !isset($_POST['note']) || empty($_POST['note'])) {
+        header('Content-Type: application/json');
+        echo json_encode(['error' => 'Les champs requis sont manquants']);
+        exit();
+    }
+    
+    $client_id = intval($_POST['client_id']);
+    $note = $_POST['note'];
+    
+    // Ajouter la note
+    $result = $clientModel->addClientNote($client_id, $note);
+    
+    if (!$result) {
+        header('Content-Type: application/json');
+        echo json_encode(['error' => 'Erreur lors de l\'ajout de la note: ' . $clientModel->getLastError()]);
+        exit();
+    }
+    
+    // Succès
+    header('Content-Type: application/json');
+    echo json_encode(['success' => true, 'note_id' => $result]);
+    exit();
+}
 ?>

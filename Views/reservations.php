@@ -27,7 +27,7 @@ $today = date('Y-m-d');
 
 foreach ($reservations as $reservation) {
     // Ajout des détails du véhicule
-    $vehicule = $voitureModel->getVoitureById($reservation['vehicule_id']);
+    $vehicule = $voitureModel->getVoitureById($reservation['voiture_id']);
     $reservation['vehicule'] = $vehicule;
     
     // Calcul de la durée de réservation en jours
@@ -38,14 +38,24 @@ foreach ($reservations as $reservation) {
     $reservation['duree'] = $duree;
     
     // Classement des réservations
-    if ($reservation['statut'] === 'en_cours' || ($today >= $reservation['date_debut'] && $today <= $reservation['date_fin'] && $reservation['statut'] !== 'annulée')) {
+    if ($reservation['statut'] === 'en_cours' || ($today >= $reservation['date_debut'] && $today <= $reservation['date_fin'] && $reservation['statut'] !== 'annulee')) {
         $reservationsEnCours[] = $reservation;
-    } elseif ($today < $reservation['date_debut'] && $reservation['statut'] !== 'annulée') {
+    } elseif ($today < $reservation['date_debut'] && $reservation['statut'] !== 'annulee') {
         $reservationsAVenir[] = $reservation;
     } else {
         $reservationsPassees[] = $reservation;
     }
+    
+    // CORRECTION: Si une réservation est confirmée et la date actuelle est dans la période,
+    // elle devrait être marquée comme "en cours"
+    if ($reservation['statut'] === 'confirmee' && $today >= $reservation['date_debut'] && $today <= $reservation['date_fin']) {
+        // Mise à jour du statut en "en cours"
+        $reservationModel->updateStatus($reservation['id'], 'en_cours');
+    }
 }
+
+// CORRECTION: Définir l'onglet actif par défaut en fonction de l'URL
+$activeTab = isset($_GET['tab']) ? $_GET['tab'] : 'upcoming';
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -57,66 +67,60 @@ foreach ($reservations as $reservation) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../Public/CSS/ClientStyle.css">
     <style>
+        /* Style additionnel pour les cartes de réservation */
         .reservation-card {
-            transition: transform 0.3s;
+            transition: transform 0.3s, box-shadow 0.3s;
             height: 100%;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
         .reservation-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 10px 20px rgba(0,0,0,0.1);
         }
-        .vehicle-img {
-            height: 150px;
-            object-fit: cover;
-        }
         .status-badge {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            z-index: 1;
-        }
-        .status-countdown {
             position: absolute;
             top: 10px;
             left: 10px;
             z-index: 1;
         }
-        .nav-pills .nav-link.active {
-            background-color: #3498db;
+        .status-countdown {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1;
+        }
+        .vehicle-img {
+            height: 180px;
+            object-fit: cover;
         }
         .booking-detail {
             display: flex;
             align-items: center;
-            margin-bottom: 8px;
+            margin-bottom: 0.5rem;
         }
         .booking-detail i {
             width: 20px;
-            margin-right: 8px;
+            margin-right: 10px;
             color: #6c757d;
         }
         .price-box {
             background-color: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
         }
         .actions-bar {
-            border-top: 1px solid #e9ecef;
-            padding-top: 15px;
-            margin-top: 15px;
+            margin-top: 1rem;
         }
+        /* Style pour l'état vide */
         .empty-state {
             text-align: center;
             padding: 40px 20px;
-            background-color: #f8f9fa;
+            background: #f8f9fa;
             border-radius: 10px;
             margin: 20px 0;
         }
         .empty-state i {
-            font-size: 3rem;
+            font-size: 4rem;
             color: #dee2e6;
             margin-bottom: 15px;
         }
@@ -234,17 +238,17 @@ foreach ($reservations as $reservation) {
                     <!-- Onglets des réservations -->
                     <ul class="nav nav-pills mb-4" id="reservationTabs" role="tablist">
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="upcoming-tab" data-bs-toggle="pill" data-bs-target="#upcoming" type="button" role="tab" aria-controls="upcoming" aria-selected="true">
+                            <button class="nav-link <?php echo $activeTab === 'upcoming' ? 'active' : ''; ?>" id="upcoming-tab" data-bs-toggle="pill" data-bs-target="#upcoming" type="button" role="tab" aria-controls="upcoming" aria-selected="true">
                                 <i class="fas fa-hourglass-start me-2"></i>À venir <span class="badge bg-primary ms-1"><?php echo count($reservationsAVenir); ?></span>
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="ongoing-tab" data-bs-toggle="pill" data-bs-target="#ongoing" type="button" role="tab" aria-controls="ongoing" aria-selected="false">
+                            <button class="nav-link <?php echo $activeTab === 'ongoing' ? 'active' : ''; ?>" id="ongoing-tab" data-bs-toggle="pill" data-bs-target="#ongoing" type="button" role="tab" aria-controls="ongoing" aria-selected="false">
                                 <i class="fas fa-clock me-2"></i>En cours <span class="badge bg-success ms-1"><?php echo count($reservationsEnCours); ?></span>
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="past-tab" data-bs-toggle="pill" data-bs-target="#past" type="button" role="tab" aria-controls="past" aria-selected="false">
+                            <button class="nav-link <?php echo $activeTab === 'past' ? 'active' : ''; ?>" id="past-tab" data-bs-toggle="pill" data-bs-target="#past" type="button" role="tab" aria-controls="past" aria-selected="false">
                                 <i class="fas fa-history me-2"></i>Passées <span class="badge bg-secondary ms-1"><?php echo count($reservationsPassees); ?></span>
                             </button>
                         </li>
@@ -252,13 +256,14 @@ foreach ($reservations as $reservation) {
                     
                     <div class="tab-content" id="reservationTabContent">
                         <!-- Réservations à venir -->
-                        <div class="tab-pane fade show active" id="upcoming" role="tabpanel" aria-labelledby="upcoming-tab">
+                        <div class="tab-pane fade <?php echo $activeTab === 'upcoming' ? 'show active' : ''; ?>" id="upcoming" role="tabpanel" aria-labelledby="upcoming-tab">
                             <div class="row">
                                 <?php if (!empty($reservationsAVenir)): ?>
                                     <?php foreach ($reservationsAVenir as $reservation): ?>
                                         <div class="col-md-4 mb-4">
                                             <div class="card reservation-card">
                                                 <?php 
+                                                // CORRECTION: Utilisation correcte du chemin d'image
                                                 $vehicule_image = isset($reservation['vehicule']['images']) && !empty($reservation['vehicule']['images']) ? 
                                                                 "../" . $reservation['vehicule']['images'] : 
                                                                 "https://res.cloudinary.com/dhivn2ahm/image/upload/v1740519207/imageNDAAMAR_ov0d7x.jpg";
@@ -282,7 +287,7 @@ foreach ($reservations as $reservation) {
                                                 </span>
                                                 
                                                 <div class="card-body">
-                                                    <h5 class="card-title"><?php echo $reservation['vehicule']['marque'] . ' ' . $reservation['vehicule']['modele']; ?></h5>
+                                                    <h5 class="card-title"><?php echo htmlspecialchars($reservation['vehicule']['marque'] . ' ' . $reservation['vehicule']['modele']); ?></h5>
                                                     
                                                     <div class="booking-detail">
                                                         <i class="fas fa-calendar-alt"></i>
@@ -296,7 +301,7 @@ foreach ($reservations as $reservation) {
                                                     
                                                     <div class="booking-detail">
                                                         <i class="fas fa-car"></i>
-                                                        <span>Catégorie: <?php echo $reservation['vehicule']['categorie']; ?></span>
+                                                        <span>Catégorie: <?php echo htmlspecialchars($reservation['vehicule']['categorie']); ?></span>
                                                     </div>
                                                     
                                                     <div class="price-box">
@@ -316,6 +321,7 @@ foreach ($reservations as $reservation) {
                                                             <button class="btn btn-sm btn-info" onclick="viewReservationDetails(<?php echo $reservation['id']; ?>)" data-bs-toggle="modal" data-bs-target="#viewReservationModal">
                                                                 <i class="fas fa-eye me-1"></i>Détails
                                                             </button>
+                                                            <!-- CORRECTION: Bouton d'annulation pour toutes les réservations à venir -->
                                                             <button class="btn btn-sm btn-danger" onclick="prepareCancel(<?php echo $reservation['id']; ?>)" data-bs-toggle="modal" data-bs-target="#cancelReservationModal">
                                                                 <i class="fas fa-times me-1"></i>Annuler
                                                             </button>
@@ -341,13 +347,14 @@ foreach ($reservations as $reservation) {
                         </div>
                         
                         <!-- Réservations en cours -->
-                        <div class="tab-pane fade" id="ongoing" role="tabpanel" aria-labelledby="ongoing-tab">
+                        <div class="tab-pane fade <?php echo $activeTab === 'ongoing' ? 'show active' : ''; ?>" id="ongoing" role="tabpanel" aria-labelledby="ongoing-tab">
                             <div class="row">
                                 <?php if (!empty($reservationsEnCours)): ?>
                                     <?php foreach ($reservationsEnCours as $reservation): ?>
                                         <div class="col-md-4 mb-4">
                                             <div class="card reservation-card">
                                                 <?php 
+                                                // CORRECTION: Utilisation correcte du chemin d'image
                                                 $vehicule_image = isset($reservation['vehicule']['images']) && !empty($reservation['vehicule']['images']) ? 
                                                                 "../" . $reservation['vehicule']['images'] : 
                                                                 "https://res.cloudinary.com/dhivn2ahm/image/upload/v1740519207/imageNDAAMAR_ov0d7x.jpg";
@@ -371,7 +378,7 @@ foreach ($reservations as $reservation) {
                                                 </span>
                                                 
                                                 <div class="card-body">
-                                                    <h5 class="card-title"><?php echo $reservation['vehicule']['marque'] . ' ' . $reservation['vehicule']['modele']; ?></h5>
+                                                    <h5 class="card-title"><?php echo htmlspecialchars($reservation['vehicule']['marque'] . ' ' . $reservation['vehicule']['modele']); ?></h5>
                                                     
                                                     <div class="booking-detail">
                                                         <i class="fas fa-calendar-alt"></i>
@@ -385,7 +392,7 @@ foreach ($reservations as $reservation) {
                                                     
                                                     <div class="booking-detail">
                                                         <i class="fas fa-car"></i>
-                                                        <span>Catégorie: <?php echo $reservation['vehicule']['categorie']; ?></span>
+                                                        <span>Catégorie: <?php echo htmlspecialchars($reservation['vehicule']['categorie']); ?></span>
                                                     </div>
                                                     
                                                     <div class="price-box">
@@ -430,29 +437,30 @@ foreach ($reservations as $reservation) {
                         </div>
                         
                         <!-- Réservations passées -->
-                        <div class="tab-pane fade" id="past" role="tabpanel" aria-labelledby="past-tab">
+                        <div class="tab-pane fade <?php echo $activeTab === 'past' ? 'show active' : ''; ?>" id="past" role="tabpanel" aria-labelledby="past-tab">
                             <div class="row">
                                 <?php if (!empty($reservationsPassees)): ?>
                                     <?php foreach ($reservationsPassees as $reservation): ?>
                                         <div class="col-md-4 mb-4">
                                             <div class="card reservation-card">
                                                 <?php 
+                                                // CORRECTION: Utilisation correcte du chemin d'image
                                                 $vehicule_image = isset($reservation['vehicule']['images']) && !empty($reservation['vehicule']['images']) ? 
                                                                 "../" . $reservation['vehicule']['images'] : 
                                                                 "https://res.cloudinary.com/dhivn2ahm/image/upload/v1740519207/imageNDAAMAR_ov0d7x.jpg";
                                                 ?>
                                                 <img src="<?php echo $vehicule_image; ?>" class="card-img-top vehicle-img" alt="<?php echo $reservation['vehicule']['marque'] . ' ' . $reservation['vehicule']['modele']; ?>">
                                                 
-                                                <?php if ($reservation['statut'] === 'annulée'): ?>
+                                                <?php if ($reservation['statut'] === 'annulee'): ?>
                                                     <span class="status-badge badge bg-danger">Annulée</span>
-                                                <?php elseif ($reservation['statut'] === 'terminée'): ?>
+                                                <?php elseif ($reservation['statut'] === 'terminee'): ?>
                                                     <span class="status-badge badge bg-secondary">Terminée</span>
                                                 <?php else: ?>
                                                     <span class="status-badge badge bg-secondary">Passée</span>
                                                 <?php endif; ?>
                                                 
                                                 <div class="card-body">
-                                                    <h5 class="card-title"><?php echo $reservation['vehicule']['marque'] . ' ' . $reservation['vehicule']['modele']; ?></h5>
+                                                    <h5 class="card-title"><?php echo htmlspecialchars($reservation['vehicule']['marque'] . ' ' . $reservation['vehicule']['modele']); ?></h5>
                                                     
                                                     <div class="booking-detail">
                                                         <i class="fas fa-calendar-alt"></i>
@@ -466,7 +474,7 @@ foreach ($reservations as $reservation) {
                                                     
                                                     <div class="booking-detail">
                                                         <i class="fas fa-car"></i>
-                                                        <span>Catégorie: <?php echo $reservation['vehicule']['categorie']; ?></span>
+                                                        <span>Catégorie: <?php echo htmlspecialchars($reservation['vehicule']['categorie']); ?></span>
                                                     </div>
                                                     
                                                     <div class="price-box">
@@ -488,7 +496,7 @@ foreach ($reservations as $reservation) {
                                                             </button>
                                                             <button class="btn btn-sm btn-outline-primary" onclick="prepareRebook(<?php echo $reservation['vehicule_id']; ?>)">
                                                                 <i class="fas fa-redo me-1"></i>Réserver à nouveau
-                                                            </button>
+                                                                </button>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -521,7 +529,8 @@ foreach ($reservations as $reservation) {
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Détails de la réservation</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button 
+type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row">
@@ -852,7 +861,6 @@ foreach ($reservations as $reservation) {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
     <script>
         // Données des réservations stockées pour un accès facile
         const reservationsData = <?php echo json_encode(array_merge($reservationsAVenir, $reservationsEnCours, $reservationsPassees)); ?>;
@@ -863,9 +871,9 @@ foreach ($reservations as $reservation) {
             const reservation = reservationsData.find(r => r.id == reservationId);
             if (!reservation) return;
             
-            // Mise à jour des informations générales
+            // CORRECTION: Mise à jour des informations du véhicule dans le modal
             $('#modalVehicleName').text(reservation.vehicule.marque + ' ' + reservation.vehicule.modele);
-            $('#modalVehicleCategory').text(reservation.vehicule.categorie);
+            $('#modalVehicleCategory').text(reservation.vehicule.categorie || 'Non spécifiée');
             $('#modalBookingRef').text('#' + reservation.id);
             
             // Statut de la réservation avec badge approprié
@@ -875,7 +883,7 @@ foreach ($reservations as $reservation) {
             if (reservation.statut === 'en_attente') {
                 statusClass = 'bg-warning text-dark';
                 statusText = 'En attente';
-            } else if (reservation.statut === 'confirmée' || reservation.statut === 'en_cours') {
+            } else if (reservation.statut === 'confirmee' || reservation.statut === 'en_cours') {
                 const today = new Date().toISOString().split('T')[0];
                 if (today < reservation.date_debut) {
                     statusClass = 'bg-info';
@@ -884,10 +892,10 @@ foreach ($reservations as $reservation) {
                     statusClass = 'bg-success';
                     statusText = 'En cours';
                 }
-            } else if (reservation.statut === 'annulée') {
+            } else if (reservation.statut === 'annulee') {
                 statusClass = 'bg-danger';
                 statusText = 'Annulée';
-            } else if (reservation.statut === 'terminée') {
+            } else if (reservation.statut === 'terminee') {
                 statusClass = 'bg-secondary';
                 statusText = 'Terminée';
             }
@@ -901,29 +909,38 @@ foreach ($reservations as $reservation) {
             // Prix
             $('#modalBookingPrice').text(formatCurrency(reservation.prix_total));
             
-            // Image du véhicule
+            // CORRECTION: Image du véhicule - Utiliser le chemin complet
             const vehiculeImage = reservation.vehicule.images ? 
-                                '../' + reservation.vehicule.images : 
-                                'https://res.cloudinary.com/dhivn2ahm/image/upload/v1740519207/imageNDAAMAR_ov0d7x.jpg';
+                              '../' + reservation.vehicule.images : 
+                              'https://res.cloudinary.com/dhivn2ahm/image/upload/v1740519207/imageNDAAMAR_ov0d7x.jpg';
             $('#modalVehicleImage').attr('src', vehiculeImage);
             
-            // Caractéristiques du véhicule
+            // CORRECTION: Caractéristiques du véhicule - Afficher les informations complètes
             let featuresHtml = '';
             
             featuresHtml += `
                 <div class="d-flex align-items-center mb-2">
                     <i class="fas fa-car-side me-3 text-muted"></i>
-                    <span>${reservation.vehicule.marque} ${reservation.vehicule.modele} (${reservation.vehicule.annee})</span>
+                    <span>${reservation.vehicule.marque} ${reservation.vehicule.modele} (${reservation.vehicule.annee || 'N/A'})</span>
                 </div>
                 <div class="d-flex align-items-center mb-2">
                     <i class="fas fa-tag me-3 text-muted"></i>
-                    <span>Catégorie: ${reservation.vehicule.categorie}</span>
+                    <span>Catégorie: ${reservation.vehicule.categorie || 'Non spécifiée'}</span>
                 </div>
                 <div class="d-flex align-items-center mb-2">
                     <i class="fas fa-money-bill-wave me-3 text-muted"></i>
                     <span>Prix journalier: ${formatCurrency(reservation.vehicule.prix_location)}</span>
                 </div>
             `;
+            
+            if (reservation.vehicule.description) {
+                featuresHtml += `
+                    <div class="d-flex align-items-start mb-2">
+                        <i class="fas fa-info-circle me-3 text-muted mt-1"></i>
+                        <span>${reservation.vehicule.description}</span>
+                    </div>
+                `;
+            }
             
             $('#vehicleFeatures').html(featuresHtml);
             
@@ -971,10 +988,10 @@ foreach ($reservations as $reservation) {
             $('#cancelModalVehicleName').text(reservation.vehicule.marque + ' ' + reservation.vehicule.modele);
             $('#cancelModalBookingPeriod').text(`Du ${formatDate(reservation.date_debut)} au ${formatDate(reservation.date_fin)}`);
             
-            // Image du véhicule
+            // CORRECTION: Image du véhicule - Utiliser le chemin complet
             const vehiculeImage = reservation.vehicule.images ? 
-                                '../' + reservation.vehicule.images : 
-                                'https://res.cloudinary.com/dhivn2ahm/image/upload/v1740519207/imageNDAAMAR_ov0d7x.jpg';
+                              '../' + reservation.vehicule.images : 
+                              'https://res.cloudinary.com/dhivn2ahm/image/upload/v1740519207/imageNDAAMAR_ov0d7x.jpg';
             $('#cancelModalVehicleImg img').attr('src', vehiculeImage);
             
             // Gérer le champ de raison d'annulation
@@ -1017,10 +1034,10 @@ foreach ($reservations as $reservation) {
             $('#extendModalVehicleName').text(reservation.vehicule.marque + ' ' + reservation.vehicule.modele);
             $('#extendModalBookingPeriod').text(`Du ${formatDate(reservation.date_debut)} au ${formatDate(reservation.date_fin)}`);
             
-            // Image du véhicule
+            // CORRECTION: Image du véhicule - Utiliser le chemin complet
             const vehiculeImage = reservation.vehicule.images ? 
-                                '../' + reservation.vehicule.images : 
-                                'https://res.cloudinary.com/dhivn2ahm/image/upload/v1740519207/imageNDAAMAR_ov0d7x.jpg';
+                              '../' + reservation.vehicule.images : 
+                              'https://res.cloudinary.com/dhivn2ahm/image/upload/v1740519207/imageNDAAMAR_ov0d7x.jpg';
             $('#extendModalVehicleImg img').attr('src', vehiculeImage);
             
             // Configurer les dates
@@ -1034,96 +1051,98 @@ foreach ($reservations as $reservation) {
             
             // Stocker le prix journalier et le prix total original
             const dailyPrice = reservation.vehicule.prix_location;
-            const originalTotal = reservation.prix_total;
-            const originalEndDate = new Date(reservation.date_fin);
-            
-            // Afficher le prix journalier
-            $('#dailyPrice').text(formatCurrency(dailyPrice));
-            
-            // Calculer le prix supplémentaire lors du changement de date
-            $('#newEndDate').change(function() {
-                const newEndDate = new Date($(this).val());
-                
-                // Valider la date
-                if (newEndDate <= originalEndDate) {
-                    alert('La nouvelle date de fin doit être postérieure à la date de fin actuelle.');
-                    $(this).val(minDate.toISOString().split('T')[0]);
-                    return;
-                }
-                
-                // Calculer les jours supplémentaires
-                const extraDays = Math.ceil((newEndDate - originalEndDate) / (1000 * 60 * 60 * 24));
-                $('#extraDays').text(extraDays);
-                
-                // Calculer le coût supplémentaire
-                const extraCost = extraDays * dailyPrice;
-                $('#extraCost').text(formatCurrency(extraCost));
-                
-                // Calculer le nouveau total
-                const newTotal = originalTotal + extraCost;
-                $('#newTotalPrice').text(formatCurrency(newTotal));
-            });
-            
-            // Déclencher le calcul initial
-            $('#newEndDate').trigger('change');
+const originalTotal = reservation.prix_total;
+const originalEndDate = new Date(reservation.date_fin);
+
+// Afficher le prix journalier
+$('#dailyPrice').text(formatCurrency(dailyPrice));
+
+// Calculer et mettre à jour le coût supplémentaire lors du changement de date
+$('#newEndDate').on('change', function() {
+    const newEndDate = new Date($(this).val());
+    
+    // Vérifier que la date est valide et postérieure à la date de fin actuelle
+    if (newEndDate <= originalEndDate) {
+        alert('La nouvelle date de fin doit être postérieure à la date de fin actuelle.');
+        $(this).val(minDate.toISOString().split('T')[0]);
+        newEndDate = new Date(minDate);
+    }
+    
+    // Calculer le nombre de jours supplémentaires
+    const diffTime = Math.abs(newEndDate - originalEndDate);
+    const extraDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    // Calculer le coût supplémentaire
+    const extraCost = extraDays * dailyPrice;
+    const newTotal = originalTotal + extraCost;
+    
+    // Mettre à jour les informations affichées
+    $('#extraDays').text(extraDays);
+    $('#extraCost').text(formatCurrency(extraCost));
+    $('#newTotalPrice').text(formatCurrency(newTotal));
+    
+    // Activer/désactiver le bouton de confirmation
+    if (extraDays > 0) {
+        $('#confirmExtendBtn').prop('disabled', false);
+    } else {
+        $('#confirmExtendBtn').prop('disabled', true);
+    }
+});
+
+// Déclencher un événement de changement pour initialiser les calculs
+$('#newEndDate').trigger('change');
+}
+
+function prepareRebook(vehiculeId) {
+    // Rediriger vers la page de détail du véhicule pour une nouvelle réservation
+    window.location.href = `detail_vehicule.php?id=${vehiculeId}`;
+}
+
+// Fonctions utilitaires
+function formatDate(dateString) {
+    const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
+    return new Date(dateString).toLocaleDateString('fr-FR', options);
+}
+
+function formatCurrency(amount) {
+    return new Intl.NumberFormat('fr-FR', { 
+        style: 'currency', 
+        currency: 'XOF',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+    }).format(amount).replace('XOF', 'FCFA');
+}
+
+// Gestion du modal de profil
+$(document).ready(function() {
+    $('#editProfileBtn').click(function() {
+        $('#profileInfo').hide();
+        $('#profileEditForm').show();
+    });
+    
+    $('#cancelEditBtn').click(function() {
+        $('#profileEditForm').hide();
+        $('#profileInfo').show();
+    });
+    
+    // Au chargement, activer l'onglet correct en fonction de l'URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const tab = urlParams.get('tab');
+    
+    if (tab) {
+        const tabElement = document.querySelector(`#${tab}-tab`);
+        if (tabElement) {
+            const tabTrigger = new bootstrap.Tab(tabElement);
+            tabTrigger.show();
         }
-        
-        function prepareRebook(vehicleId) {
-            // Rediriger vers la page d'accueil avec le véhicule présélectionné
-            window.location.href = `AcceuilClient.php?rebook=${vehicleId}`;
-        }
-        
-        // Fonctions utilitaires
-        function formatDate(dateString) {
-            const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
-            return new Date(dateString).toLocaleDateString('fr-FR', options);
-        }
-        
-        function formatCurrency(amount) {
-            return new Intl.NumberFormat('fr-FR', { 
-                style: 'currency', 
-                currency: 'XOF',
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0
-            }).format(amount);
-        }
-        
-        // Initialisation des événements
-        $(document).ready(function() {
-            // Gestion du profil utilisateur
-            $('#editProfileBtn').on('click', function() {
-                $('#profileInfo').hide();
-                $('#profileEditForm').show();
-            });
-            
-            $('#cancelEditBtn').on('click', function() {
-                $('#profileInfo').show();
-                $('#profileEditForm').hide();
-            });
-            
-            // Vérifier si un paramètre de réservation est présent dans l'URL
-            const urlParams = new URLSearchParams(window.location.search);
-            const tabParam = urlParams.get('tab');
-            
-            if (tabParam) {
-                // Activer l'onglet correspondant
-                $(`#${tabParam}-tab`).tab('show');
-            }
-            
-            // Validation du formulaire de prolongation
-            $('#extendForm').on('submit', function(e) {
-                const newEndDate = new Date($('#newEndDate').val());
-                const currentEndDate = new Date($('#currentEndDate').val());
-                
-                if (newEndDate <= currentEndDate) {
-                    e.preventDefault();
-                    alert('La nouvelle date de fin doit être postérieure à la date de fin actuelle.');
-                    return false;
-                }
-                
-                return true;
-            });
-        });
-    </script>
+    }
+    
+    // Mettre à jour l'URL lorsqu'un onglet est sélectionné
+    $('button[data-bs-toggle="pill"]').on('shown.bs.tab', function (e) {
+        const tabId = $(e.target).attr('id').replace('-tab', '');
+        history.replaceState(null, null, `?tab=${tabId}`);
+    });
+});
+</script>
 </body>
 </html>

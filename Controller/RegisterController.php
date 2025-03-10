@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         if ($userId) {
             // Ajouter l'utilisateur dans la table Clients
-            $clientModel = new Client();
+            $clientModel = new client();
             $clientId = $clientModel->create($userId, $telephone, $adresse);
 
             

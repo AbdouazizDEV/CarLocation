@@ -39,104 +39,7 @@
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
-        <style>
-            body {
-                background-color: #f5f5f5;
-            }
-            .sidebar {
-                background-color: white;
-                min-height: 100vh;
-                border-right: 1px solid #e0e0e0;
-            }
-            .logo-container {
-                padding: 20px;
-                text-align: center;
-                border-bottom: 1px solid #e0e0e0;
-            }
-            .logo {
-                max-width: 150px;
-            }
-            .menu-item {
-                display: flex;
-                align-items: center;
-                padding: 15px 20px;
-                color: #333;
-                text-decoration: none;
-                transition: background-color 0.3s;
-                position: relative;
-            }
-            .menu-item:hover {
-                background-color: #f0f0f0;
-            }
-            .menu-item.active {
-                background-color: #e8f0fe;
-                font-weight: bold;
-            }
-            .menu-item i {
-                margin-right: 10px;
-            }
-            .search-bar {
-                max-width: 350px;
-                margin-right: 15px;
-            }
-            .profile-section {
-                display: flex;
-                align-items: center;
-            }
-            .profile-section .dropdown-toggle::after {
-                display: none;
-            }
-            .content-container {
-                padding: 20px;
-            }
-            .car-image {
-                width: 80px;
-                height: 60px;
-                object-fit: cover;
-                border-radius: 4px;
-            }
-            .action-buttons .btn {
-                margin-right: 5px;
-            }
-            .status-badge {
-                font-size: 0.8rem;
-                padding: 0.25rem 0.5rem;
-            }
-            /* Style pour les modals */
-            .modal-dialog.modal-xl {
-                max-width: 1140px;
-            }
-            .form-group {
-                margin-bottom: 1rem;
-            }
-            .date-range-info {
-                background-color: #f8f9fa;
-                padding: 10px 15px;
-                border-radius: 5px;
-                margin-bottom: 15px;
-            }
-            .date-range-info .days-count {
-                font-weight: bold;
-                color: #0d6efd;
-            }
-            .price-calculation {
-                background-color: #f0f7ff;
-                padding: 15px;
-                border-radius: 5px;
-                margin-top: 15px;
-            }
-            .price-row {
-                display: flex;
-                justify-content: space-between;
-                margin-bottom: 5px;
-            }
-            .price-total {
-                font-weight: bold;
-                border-top: 1px solid #dee2e6;
-                padding-top: 5px;
-                margin-top: 5px;
-            }
-        </style>
+        <link rel="stylesheet" href="../Public/CSS/ReservationStyle.css">
     </head>
     <body>
         <div class="container-fluid">
@@ -380,7 +283,7 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <form method="POST" action="../Controller/ReservationController.php" id="addReservationForm">
+                        <form method="POST" action="../Controller/ReservationPourLesClient.php" id="addReservationForm">
                             <input type="hidden" name="action" value="add">
                             
                             <div class="row">

@@ -22,7 +22,7 @@ if (!isset($_SESSION['user']) || !isset($_SESSION['user_id'])) {
     }
     // Sinon, rediriger vers la page de connexion
     else {
-        header('Location: login.php');
+        header('Location: ../Views/login.php');
         exit();
     }
 }
@@ -156,7 +156,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             
         default:
             // Rediriger vers la page appropriée selon le rôle
-            $redirect = ($_SESSION['user_role'] === 'client') ? 'AcceuilClient.php' : 'Offres.php';
+            $redirect = ($_SESSION['user_role'] === 'client') ? 'AcceuilClient.php' : '../Views/Offres.php';
             header('Location: ' . $redirect);
             exit();
             break;
@@ -193,7 +193,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['error'] = "Erreur lors de la création de l'offre: " . $offreModel->getLastError();
             }
             
-            header('Location: Offres.php');
+            header('Location: ../Views/Offres.php');
             exit();
             break;
             
@@ -217,7 +217,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['error'] = "Erreur lors de la mise à jour de l'offre: " . $offreModel->getLastError();
             }
             
-            header('Location: Offres.php');
+            header('Location: ../Views/Offres.php');
             exit();
             break;
             
@@ -233,7 +233,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['error'] = "Erreur lors de la suppression de l'offre: " . $offreModel->getLastError();
             }
             
-            header('Location: Offres.php');
+            header('Location: ../Views/Offres.php');
             exit();
             break;
             
@@ -250,12 +250,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['error'] = "Erreur lors de la réactivation de l'offre: " . $offreModel->getLastError();
             }
             
-            header('Location: Offres.php');
+            header('Location: ../Views/Offres.php');
             exit();
             break;
             
         default:
-            header('Location: Offres.php');
+            header('Location: ../Views/Offres.php');
             exit();
             break;
     }
