@@ -211,8 +211,8 @@
                     <a href="facturation.php" class="menu-item active">
                         <i class="fas fa-file-invoice-dollar"></i> Facturation
                     </a>
-                    <a href="rapports.php" class="menu-item">
-                        <i class="fas fa-chart-bar"></i> Rapports
+                    <a href="Offres.php" class="menu-item">
+                        <i class="fas fa-chart-bar"></i> Offres
                     </a>
                     <a href="parametres.php" class="menu-item">
                         <i class="fas fa-cogs"></i> Paramètres

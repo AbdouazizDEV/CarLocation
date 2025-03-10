@@ -464,5 +464,24 @@ class Voiture {
             return [];
         }
     }
+    /**
+ * Récupère toutes les voitures disponibles à la location
+ * @return array Liste des voitures disponibles
+ */
+public function getVoituresDisponibles() {
+    try {
+        $query = "SELECT v.* FROM Voitures v 
+                 WHERE v.statut = 'disponible' 
+                 ORDER BY v.marque, v.modele";
+        
+        $stmt = $this->db->prepare($query);
+        $stmt->execute();
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Exception $e) {
+        $this->lastError = "Erreur lors de la récupération des voitures disponibles: " . $e->getMessage();
+        return [];
+    }
+}
 }
 ?>
