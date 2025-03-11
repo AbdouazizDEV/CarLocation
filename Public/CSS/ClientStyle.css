@@ -160,3 +160,100 @@ body {
     color: #dee2e6;
     margin-bottom: 15px;
 }
+.card-offer {
+    transition: transform 0.3s;
+    height: 100%;
+}
+.card-offer:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+.offer-timer {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: rgba(0,0,0,0.7);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+}
+.offer-status {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+}
+.offer-discount {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background-color: #dc3545;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+.offer-vehicle-image {
+    height: 180px;
+    object-fit: cover;
+}
+.offer-details {
+    padding: 15px;
+}
+.icon-btn {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    transition: all 0.3s;
+}
+.favorite-btn {
+    color: #dc3545;
+    background-color: rgba(220, 53, 69, 0.1);
+}
+.favorite-btn:hover {
+    background-color: rgba(220, 53, 69, 0.2);
+}
+.favorite-btn.active {
+    color: white;
+    background-color: #dc3545;
+}
+.view-btn {
+    color: #0d6efd;
+    background-color: rgba(13, 110, 253, 0.1);
+}
+.view-btn:hover {
+    background-color: rgba(13, 110, 253, 0.2);
+}
+.reserve-btn {
+    color: #198754;
+    background-color: rgba(25, 135, 84, 0.1);
+}
+.reserve-btn:hover {
+    background-color: rgba(25, 135, 84, 0.2);
+}
+.car-image {
+    width: 80px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+.filter-section {
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+.promo-banner {
+    background: linear-gradient(45deg, #3498db, #2c3e50);
+    border-radius: 10px;
+    padding: 20px;
+    color: white;
+    margin-bottom: 20px;
+}
