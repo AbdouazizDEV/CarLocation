@@ -17,3 +17,4 @@ vendor/
 # Ignorer les fichiers d'environnement de développement
 /.idea
 /.vscode
+.qodo
